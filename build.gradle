@@ -28,6 +28,12 @@ dependencies {
 
     // --- Faker (генерация тестовых данных) ---
     implementation 'com.github.javafaker:javafaker:1.0.2'
+
+    // --- Selenide для UI тестов ---
+    testImplementation 'com.codeborne:selenide:6.19.1'
+
+    // --- AssertJ для мягких и обычных assertions ---
+    testImplementation 'org.assertj:assertj-core:3.27.2'
 }
 
 test {

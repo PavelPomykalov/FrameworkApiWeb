@@ -1,17 +1,17 @@
-package tests;
+package api.tests;
 
-import apiClient.ApiClientUser;
+import api.apiClient.ApiClientUser;
 import io.restassured.response.Response;
-import models.User;
-import models.UserResponse;
+import api.models.User;
+import api.models.UserResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import java.util.stream.Stream;
 
-import static testdata.TestData.DEFAULT_USER;
-import static testdata.TestData.INVALID_USER;
+import static api.testdata.TestData.DEFAULT_USER;
+import static api.testdata.TestData.INVALID_USER;
 
 /**
  * Параметризованные тесты делают, чтобы один и тот же тест запускался с разными наборами данных — без дублирования кода.

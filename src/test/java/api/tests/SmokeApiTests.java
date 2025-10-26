@@ -1,12 +1,12 @@
-package tests;
+package api.tests;
 
-import apiClient.ApiClientUser;
+import api.apiClient.ApiClientUser;
 import io.restassured.response.Response;
-import models.UserResponse;
+import api.models.UserResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import static testdata.TestData.DEFAULT_USER;
-import static testdata.TestData.INVALID_USER;
+import static api.testdata.TestData.DEFAULT_USER;
+import static api.testdata.TestData.INVALID_USER;
 
 
 public class SmokeApiTests {
