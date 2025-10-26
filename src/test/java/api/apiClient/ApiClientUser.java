@@ -1,11 +1,11 @@
-package apiClient;
+package api.apiClient;
 
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
-import models.User;
-import static constans.Constans.BASE_URI;
-import static constans.Constans.USER_ENDPOINT;
+import api.models.User;
+import static api.constans.Constans.BASE_URI;
+import static api.constans.Constans.USER_ENDPOINT;
 
 public class ApiClientUser {
 

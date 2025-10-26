@@ -1,7 +1,7 @@
-package testdata;
+package api.testdata;
 
 import com.github.javafaker.Faker;
-import models.User;
+import api.models.User;
 
 public class TestData {
     public static Faker faker =  new Faker();
