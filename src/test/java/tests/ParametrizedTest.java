@@ -46,4 +46,15 @@ public class ParametrizedTest {
     public void assertTest(String value){
         Assertions.assertTrue(value.startsWith("a"));
     }
+
+    @ParameterizedTest  // проверка с передачей нескольких параметров
+    @CsvSource({
+            "asd, true",
+            "bsd, false",
+            "azx, true"
+    })
+    public void testStartsWithA(String input, boolean expectedResult) {
+        boolean actualResult = input.startsWith("a");
+        Assertions.assertEquals(expectedResult, actualResult);
+    }
 }
