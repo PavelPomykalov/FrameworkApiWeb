@@ -6,6 +6,7 @@ import models.User;
 import models.UserResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import java.util.stream.Stream;
 
@@ -38,7 +39,11 @@ public class ParametrizedTest {
         Assertions.assertEquals(200, response.statusCode());
         Assertions.assertEquals(200, createdUserResponse.getCode());
         Assertions.assertEquals("unknown", createdUserResponse.getType());
+    }
 
-
+    @ParameterizedTest
+    @CsvSource({"asd","azx"})  // идет перечисление в value
+    public void assertTest(String value){
+        Assertions.assertTrue(value.startsWith("a"));
     }
 }
