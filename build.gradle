@@ -34,8 +34,12 @@ dependencies {
 
     // --- AssertJ для мягких и обычных assertions ---
     testImplementation 'org.assertj:assertj-core:3.27.2'
+
+    // --- Owner для чтения проперти файлов ---
+    implementation 'org.aeonbits.owner:owner:1.0.12'
 }
 
 test {
     useJUnitPlatform()
+    systemProperties(System.getProperties());
 }

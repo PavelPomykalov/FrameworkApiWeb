@@ -2,6 +2,8 @@ package web.tests;
 
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.Selenide;
+import config.TestPropertiesConfig;
+import org.aeonbits.owner.ConfigFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,13 +14,15 @@ import static com.codeborne.selenide.Selenide.*;
 import static com.codeborne.selenide.WebDriverRunner.url;
 
 public class BaseTest {
+    TestPropertiesConfig configProperties = ConfigFactory.create(TestPropertiesConfig.class,System.getProperties());
 
     @BeforeEach
     public void setUp() {
         Configuration.browser = "chrome";
         Configuration.browserSize = "1920x1080";
         Configuration.timeout = 10_000;
-        Selenide.open(BASE_URI_WEB);
+        Configuration.headless = Boolean.parseBoolean(configProperties.getHeadless());  // Запуск без браузера
+        Selenide.open(configProperties.getUiBaseUrl());
     }
 
     @AfterEach
