@@ -1,17 +1,21 @@
 package api.apiClient;
 
+import config.TestPropertiesConfig;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import api.models.User;
+import org.aeonbits.owner.ConfigFactory;
+
 import static api.constans.Constans.BASE_URI;
 import static api.constans.Constans.USER_ENDPOINT;
 
 public class ApiClientUser {
+    TestPropertiesConfig configProperties = ConfigFactory.create(TestPropertiesConfig.class,System.getProperties());
 
     private RequestSpecification getRequestSpec() {
         return RestAssured.given()
-                .baseUri(BASE_URI)
+                .baseUri(configProperties.getApiBaseUrl())
                 .accept("application/json")
                 .contentType("application/json");
     }

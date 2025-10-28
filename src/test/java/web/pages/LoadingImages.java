@@ -1,6 +1,7 @@
 package web.pages;
 
 import com.codeborne.selenide.SelenideElement;
+import org.assertj.core.api.SoftAssertions;
 
 import java.time.Duration;
 
