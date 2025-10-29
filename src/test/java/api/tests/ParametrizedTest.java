@@ -5,6 +5,7 @@ import io.restassured.response.Response;
 import api.models.User;
 import api.models.UserResponse;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -28,7 +29,7 @@ public class ParametrizedTest {
     static Stream<User> users() {
         return Stream.of(DEFAULT_USER, INVALID_USER);
     }
-
+    @Tag("API")
     @ParameterizedTest
     @MethodSource ("users")
 
@@ -40,7 +41,7 @@ public class ParametrizedTest {
         Assertions.assertEquals(200, createdUserResponse.getCode());
         Assertions.assertEquals("unknown", createdUserResponse.getType());
     }
-
+    @Tag("API")
     @ParameterizedTest
     @CsvSource({"asd","azx"})  // идет перечисление в value
     public void assertTest(String value){
