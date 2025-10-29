@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'io.qameta.allure' version '2.12.0' // Добавляем Allure плагин
 }
 
 group = 'pavelP'
@@ -37,6 +38,10 @@ dependencies {
 
     // --- Owner для чтения проперти файлов ---
     implementation 'org.aeonbits.owner:owner:1.0.12'
+
+    // --- Allure ---
+    testImplementation 'io.qameta.allure:allure-junit5:2.21.0'
+    testImplementation 'io.qameta.allure:allure-rest-assured:2.21.0'// Для JUnit 5
 }
 
 test {

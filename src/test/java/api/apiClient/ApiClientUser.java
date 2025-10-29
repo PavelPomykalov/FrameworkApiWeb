@@ -1,6 +1,7 @@
 package api.apiClient;
 
 import config.TestPropertiesConfig;
+import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
@@ -17,7 +18,8 @@ public class ApiClientUser {
         return RestAssured.given()
                 .baseUri(configProperties.getApiBaseUrl())
                 .accept("application/json")
-                .contentType("application/json");
+                .contentType("application/json")
+                .filter(new AllureRestAssured()); // для логирования Запроса и Ответа
     }
 
     public Response createUser(User user) {
