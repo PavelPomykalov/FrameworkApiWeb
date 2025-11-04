@@ -55,7 +55,9 @@ jobs:
       - name: Deploy Allure Report
         if: always()
         uses: peaceiris/actions-gh-pages@v2
-        env:
-          PERSONAL_TOKEN: ${{ secrets.TOKEN }}
-          PUBLISH_BRANCH: gh-pages
-          PUBLISH_DIR: allure-history
+        with:
+          personal_token: ${{ secrets.TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+          force_orphan: true
+
