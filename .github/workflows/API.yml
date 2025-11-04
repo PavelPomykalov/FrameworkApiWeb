@@ -2,9 +2,9 @@ name: API Tests
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -15,22 +15,26 @@ jobs:
       pages: write
 
     steps:
+      # 1. Клонируем репозиторий
       - name: Checkout project
         uses: actions/checkout@v4
 
+      # 2. Устанавливаем JDK 21
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
+      # 3. Даем права на выполнение gradlew
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      # 4. Запускаем API тесты
       - name: Run API tests
         run: ./gradlew clean testApi
 
-      # 1. Копируем историю предыдущих Allure отчётов
+      # 5. Копируем историю предыдущих Allure отчетов
       - name: Copy history
         uses: actions/checkout@v4
         if: always()
@@ -38,7 +42,7 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
-      # 2. Генерируем новый Allure отчет
+      # 6. Генерируем новый Allure отчет
       - name: Build Allure Report
         if: always()
         uses: simple-elf/allure-report-action@v1.10
@@ -47,7 +51,7 @@ jobs:
           allure_history: allure-history
           keep_reports: 20
 
-      # 3. Публикуем отчет на GitHub Pages
+      # 7. Публикуем отчет на GitHub Pages
       - name: Deploy Allure Report
         if: always()
         uses: peaceiris/actions-gh-pages@v2

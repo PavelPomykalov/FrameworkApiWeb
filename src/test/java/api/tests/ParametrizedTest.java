@@ -41,6 +41,7 @@ public class ParametrizedTest {
         Assertions.assertEquals(200, createdUserResponse.getCode());
         Assertions.assertEquals("unknown", createdUserResponse.getType());
     }
+
     @Tag("API")
     @ParameterizedTest
     @CsvSource({"asd","azx"})  // идет перечисление в value

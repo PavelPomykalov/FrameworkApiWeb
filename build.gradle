@@ -46,5 +46,35 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    systemProperties(System.getProperties());
+    systemProperties(System.getProperties())
+    testLogging {
+        events "PASSED", "FAILED", "SKIPPED" // Логирование результатов в консоль
+    }
+}
+
+// === Задача для API-тестов ===
+tasks.register('testApi', Test) {
+    useJUnitPlatform {
+        includeTags 'API'
+    }
+    description = 'Запускает все тесты с тегом @Tag("API")'
+    group = 'verification'
+}
+
+// === Задача для WEB-тестов ===
+tasks.register('testWeb', Test) {
+    useJUnitPlatform {
+        includeTags 'WEB'
+    }
+    description = 'Запускает все тесты с тегом @Tag("WEB")'
+    group = 'verification'
+}
+
+// === Задача для SMOKE-тестов ===
+tasks.register('testSmoke', Test) {
+    useJUnitPlatform {
+        includeTags 'SMOKE'
+    }
+    description = 'Запускает все тесты с тегом @Tag("SMOKE")'
+    group = 'verification'
 }

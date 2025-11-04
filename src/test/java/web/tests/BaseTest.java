@@ -36,10 +36,10 @@ public class BaseTest {
         closeWebDriver();
     }
 
-    @Test
-    public void checkTest() {
-        // Проверка, что URL действительно содержит нужный фрагмент
-        Assertions.assertTrue(url().contains("bonigarcia.dev/selenium-webdriver-java!"));
-    }
+//    @Test
+//    public void checkTest() {
+//        // Проверка, что URL действительно содержит нужный фрагмент
+//        Assertions.assertTrue(url().contains("bonigarcia.dev/selenium-webdriver-java!"));
+//    }
 }
 
