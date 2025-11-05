@@ -1,66 +1,34 @@
 pipeline {
     agent any
-
     parameters {
-        choice(name: 'TAG', choices: ['API', 'WEB', 'SMOKE'], description: 'Какой набор тестов запускать')
-        choice(name: 'ENV', choices: ['dev', 'test'], description: 'На каком стенде запускать тесты')
+        extendedChoice(
+            name: 'TAGS',
+            type: 'PT_CHECKBOX',
+            multiSelectDelimiter: ',',
+            description: 'Выберите теги тестов',
+            quoteValue: false,
+            visibleItemCount: 5,
+            value: 'API,SMOKE,WEB,UI'
+        )
     }
-
-    environment {
-        ALLURE_RESULTS = "build/allure-results"
-    }
-
     stages {
-
         stage('Checkout') {
             steps {
-                checkout scm
-                sh "chmod +x gradlew"
+                git url: 'https://github.com/PavelPomykalov/FrameworkApiWeb', branch: 'main'
             }
         }
 
-        stage('Run tests') {
+        stage('Run Tests') {
             steps {
-                echo "Запуск тестов по тегу: ${params.TAG} на стенде: ${params.ENV}"
-
-                script {
-                    def taskName = ""
-                    if (params.TAG == 'API') taskName = "testApi"
-                    if (params.TAG == 'WEB') taskName = "testWeb"
-                    if (params.TAG == 'SMOKE') taskName = "testSmoke"
-
-                    sh "./gradlew clean ${taskName} -Dallure.results.directory=${ALLURE_RESULTS} -Denv=${params.ENV}"
-                }
+                echo "Запуск тестов с тегами: ${params.TAGS} на стенде dev"
+                sh "./gradlew clean test -Dallure.results.directory=build/allure-results -Denv=dev -Dtags=${params.TAGS}"
             }
         }
 
         stage('Allure Report') {
             steps {
-                allure results: [[path: "${ALLURE_RESULTS}"]]
+                allure results: [[path: 'build/allure-results']]
             }
-        }
-    }
-
-    post {
-        success {
-            emailext (
-                subject: "✅ Тесты успешно завершены (${params.TAG}, ${params.ENV})",
-                body: """✔ Pipeline: ${env.JOB_NAME}
-✔ Build: #${env.BUILD_NUMBER}
-✔ Стенд: ${params.ENV}
-✔ Тег: ${params.TAG}""",
-                to: "pavel.pomikalov@yandex.ru"
-            )
-        }
-
-        failure {
-            emailext (
-                subject: "❌ Тесты упали (${params.TAG}, ${params.ENV})",
-                body: """❌ Pipeline: ${env.JOB_NAME}
-❌ Build: #${env.BUILD_NUMBER}
-❌ смотри логи""",
-                to: "pavel.pomikalov@yandex.ru"
-            )
         }
     }
 }
