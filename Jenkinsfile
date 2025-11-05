@@ -29,7 +29,7 @@ pipeline {
                     if (params.API) tasks << 'testApi'
                     if (params.SMOKE) tasks << 'testSmoke'
                     if (params.WEB) tasks << 'testWeb'
-                    // UI-тесты пока не делаем, можно добавить аналогично
+                    if (params.UI) tasks << 'testWeb'  // UI-тесты через ту же задачу
 
                     if (tasks.isEmpty()) {
                         echo "Тесты не выбраны. Пропуск."
@@ -40,7 +40,12 @@ pipeline {
                         // запускаем выбранные задачи
                         tasks.each { task ->
                             echo "Запуск Gradle задачи: ${task}"
-                            sh "./gradlew ${task} -Dallure.results.directory=build/allure-results || true"
+                            // добавляем headless для UI-тестов
+                            if (task == 'testWeb') {
+                                sh "./gradlew ${task} -Dallure.results.directory=build/allure-results -Dheadless=true || true"
+                            } else {
+                                sh "./gradlew ${task} -Dallure.results.directory=build/allure-results || true"
+                            }
                         }
                     }
                 }
