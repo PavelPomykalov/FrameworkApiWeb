@@ -35,7 +35,6 @@ pipeline {
                         echo "Ни один тест не выбран. Пропускаем запуск."
                     } else {
                         echo "Запуск Gradle задач: ${tasksToRun.join(' ')}"
-                        // очищаем результаты allure перед запуском
                         sh 'rm -rf build/allure-results'
 
                         // запуск выбранных задач Gradle
@@ -44,7 +43,7 @@ pipeline {
                             returnStatus: true
                         )
 
-                        // собираем Allure отчёт в любом случае
+                        // сборка отчёта
                         sh './gradlew allureReport'
 
                         if (result != 0) {
@@ -56,9 +55,15 @@ pipeline {
             }
         }
     }
+
     post {
         always {
-            echo "Сборка завершена. Результаты Allure доступны в build/allure-report"
+            echo "Сборка завершена. Публикуем Allure отчет."
+            // Публикуем отчет через плагин Allure Jenkins
+            allure([
+                reportDir: 'build/allure-results',
+                results: [[path: 'build/allure-results']]
+            ])
         }
     }
 }
