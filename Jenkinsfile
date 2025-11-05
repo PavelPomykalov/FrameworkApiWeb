@@ -28,9 +28,10 @@ pipeline {
                 }
             }
         }
-
-        stage('Allure Report') {
-            steps {
+    }
+    post {
+        always {
+            stage('Allure Report') {
                 allure includeProperties: false, jdk: '', results: [[path: 'build/allure-results']]
             }
         }
