@@ -42,7 +42,7 @@ pipeline {
 
     post {
         success {
-            emailtext (
+            emailext (
                 subject: "✅ Тесты успешно завершены (${params.TAG}, ${params.ENV})",
                 body: "✔ Pipeline: ${env.JOB_NAME}\n✔ Build: #${env.BUILD_NUMBER}\n✔ Стенд: ${params.ENV}\n✔ Тег: ${params.TAG}",
                 to: "pavel.pomikalov@yandex.ru"
@@ -50,7 +50,7 @@ pipeline {
         }
 
         failure {
-            emailtext (
+            emailext (
                 subject: "❌ Тесты упали (${params.TAG}, ${params.ENV})",
                 body: "❌ Pipeline: ${env.JOB_NAME}\n❌ Build: #${env.BUILD_NUMBER}\n❌ смотри логи",
                 to: "pavel.pomikalov@yandex.ru"
