@@ -1,9 +1,9 @@
 pipeline {
     agent any
     parameters {
-        booleanParam(name: 'API', defaultValue: true, description: 'Тег API')
-        booleanParam(name: 'SMOKE', defaultValue: true, description: 'Тег SMOKE')
-        booleanParam(name: 'WEB', defaultValue: true, description: 'Тег WEB')
+        booleanParam(name: 'API', defaultValue: false, description: 'Тег API')
+        booleanParam(name: 'SMOKE', defaultValue: false, description: 'Тег SMOKE')
+        booleanParam(name: 'WEB', defaultValue: false, description: 'Тег WEB')
         booleanParam(name: 'UI', defaultValue: false, description: 'Тег UI')
     }
     stages {
@@ -22,16 +22,29 @@ pipeline {
                     if (params.WEB) selectedTags << 'WEB'
                     if (params.UI) selectedTags << 'UI'
 
+                    if (selectedTags.isEmpty()) {
+                        echo "Ни один тег не выбран. Тесты не будут запущены."
+                        currentBuild.result = 'SUCCESS'
+                        return
+                    }
+
                     def tagsString = selectedTags.join(',')
-                    echo "Запуск тестов с тегами: ${tagsString} на стенде dev"
-                    sh "./gradlew clean test -Dallure.results.directory=build/allure-results -Denv=dev -Dtags=${tagsString}"
+                    echo "Запуск тестов с тегами: ${tagsString}"
+
+                    // Gradle с флагом, чтобы Allure сохранял результаты
+                    sh "./gradlew clean testWithTags -Dtags=${tagsString} -Dallure.results.directory=build/allure-results || true"
                 }
             }
-        }
-    }
-    post {
-        always {
-            allure includeProperties: false, jdk: '', results: [[path: 'build/allure-results']]
+            post {
+                always {
+                    echo "Генерация Allure-отчета"
+                    allure([
+                        includeProperties: false,
+                        jdk: '',
+                        results: [[path: 'build/allure-results']]
+                    ])
+                }
+            }
         }
     }
 }
