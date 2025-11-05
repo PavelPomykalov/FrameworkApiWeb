@@ -29,7 +29,7 @@ pipeline {
                     if (params.API) tasksToRun << 'testApi'
                     if (params.SMOKE) tasksToRun << 'testSmoke'
                     if (params.WEB) tasksToRun << 'testWeb'
-                    if (params.UI) tasksToRun << 'testUi' // если есть такая задача в Gradle
+                    if (params.UI) tasksToRun << 'testUi' // если есть такая Gradle задача
 
                     if (tasksToRun.isEmpty()) {
                         echo "Ни один тест не выбран. Пропускаем запуск."
@@ -37,13 +37,11 @@ pipeline {
                         echo "Запуск Gradle задач: ${tasksToRun.join(' ')}"
                         sh 'rm -rf build/allure-results'
 
-                        // запуск выбранных задач Gradle
                         def result = sh(
                             script: "./gradlew ${tasksToRun.join(' ')} -Dallure.results.directory=build/allure-results || true",
                             returnStatus: true
                         )
 
-                        // сборка отчёта
                         sh './gradlew allureReport'
 
                         if (result != 0) {
@@ -59,10 +57,8 @@ pipeline {
     post {
         always {
             echo "Сборка завершена. Публикуем Allure отчет."
-            // Публикуем отчет через плагин Allure Jenkins
             allure([
-                reportDir: 'build/allure-results',
-                results: [[path: 'build/allure-results']]
+                report: [[path: 'build/allure-results']]
             ])
         }
     }
