@@ -1,23 +1,18 @@
 pipeline {
     agent any
-
     options {
-        // Всегда сохранять логи даже при ошибках
-        skipDefaultCheckout()
         timestamps()
     }
-
     parameters {
-        booleanParam(name: 'API', defaultValue: false, description: 'Тег API')
-        booleanParam(name: 'SMOKE', defaultValue: false, description: 'Тег SMOKE')
-        booleanParam(name: 'WEB', defaultValue: false, description: 'Тег WEB')
-        booleanParam(name: 'UI', defaultValue: false, description: 'Тег UI')
+        booleanParam(name: 'API', defaultValue: false, description: 'Запуск тестов с тегом API')
+        booleanParam(name: 'SMOKE', defaultValue: false, description: 'Запуск тестов с тегом SMOKE')
+        booleanParam(name: 'WEB', defaultValue: false, description: 'Запуск тестов с тегом WEB')
+        booleanParam(name: 'UI', defaultValue: false, description: 'Запуск тестов с тегом UI')
     }
-
     stages {
         stage('Clean Workspace') {
             steps {
-                deleteDir() // Полностью очищаем рабочую директорию
+                deleteDir()
             }
         }
 
@@ -30,39 +25,40 @@ pipeline {
         stage('Run Tests') {
             steps {
                 script {
-                    def selectedTags = []
-                    if (params.API) selectedTags << 'API'
-                    if (params.SMOKE) selectedTags << 'SMOKE'
-                    if (params.WEB) selectedTags << 'WEB'
-                    if (params.UI) selectedTags << 'UI'
+                    def tasksToRun = []
+                    if (params.API) tasksToRun << 'testApi'
+                    if (params.SMOKE) tasksToRun << 'testSmoke'
+                    if (params.WEB) tasksToRun << 'testWeb'
+                    if (params.UI) tasksToRun << 'testUi' // если есть такая задача в Gradle
 
-                    if (selectedTags.isEmpty()) {
-                        echo "Теги не выбраны. Тесты не запускаются."
+                    if (tasksToRun.isEmpty()) {
+                        echo "Ни один тест не выбран. Пропускаем запуск."
                     } else {
-                        def tagsString = selectedTags.join(',')
-                        echo "Запуск тестов с тегами: ${tagsString}"
-
-                        // Чистим старые результаты Allure
+                        echo "Запуск Gradle задач: ${tasksToRun.join(' ')}"
+                        // очищаем результаты allure перед запуском
                         sh 'rm -rf build/allure-results'
 
-                        // Запуск Gradle с выбранными тегами
-                        sh "./gradlew clean test -Dallure.results.directory=build/allure-results -Dtags=${tagsString}"
+                        // запуск выбранных задач Gradle
+                        def result = sh(
+                            script: "./gradlew ${tasksToRun.join(' ')} -Dallure.results.directory=build/allure-results || true",
+                            returnStatus: true
+                        )
+
+                        // собираем Allure отчёт в любом случае
+                        sh './gradlew allureReport'
+
+                        if (result != 0) {
+                            currentBuild.result = 'FAILURE'
+                            echo "Некоторые тесты завершились с ошибками"
+                        }
                     }
                 }
             }
         }
-
-        stage('Allure Report') {
-            steps {
-                // Всегда пытаемся собрать Allure, даже если тесты упали
-                allure includeProperties: false, reportBuildPolicy: 'ALWAYS', results: [[path: 'build/allure-results']]
-            }
-        }
     }
-
     post {
         always {
-            echo 'Pipeline finished'
+            echo "Сборка завершена. Результаты Allure доступны в build/allure-report"
         }
     }
 }
