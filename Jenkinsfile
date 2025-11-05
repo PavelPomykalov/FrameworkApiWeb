@@ -11,7 +11,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
@@ -22,20 +21,20 @@ pipeline {
         stage('Run tests') {
             steps {
                 echo "Запуск тестов по тегу: ${params.TAG} на стенде: ${params.ENV}"
-
-                sh """
-                   ./gradlew clean test \
-                     -Dallure.results.directory=${ALLURE_RESULTS} \
-                     -Denv=${params.ENV} \
-                     -Dgroups=${params.TAG}
-                """
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    sh """
+                       ./gradlew clean test \
+                         -Dallure.results.directory=${ALLURE_RESULTS} \
+                         -Denv=${params.ENV} \
+                         -Dgroups=${params.TAG}
+                    """
+                }
             }
         }
 
         stage('Allure Report') {
             steps {
                 script {
-                    // Проверяем, что папка с результатами существует
                     if (fileExists("${ALLURE_RESULTS}")) {
                         allure([
                             results: [[path: "${ALLURE_RESULTS}"]],
@@ -53,8 +52,7 @@ pipeline {
         success {
             emailext(
                 subject: "✅ Тесты успешно завершены (${params.TAG}, ${params.ENV})",
-                body: """\
-Pipeline: ${env.JOB_NAME}
+                body: """Pipeline: ${env.JOB_NAME}
 Build: #${env.BUILD_NUMBER}
 Стенд: ${params.ENV}
 Тег: ${params.TAG}
@@ -66,8 +64,7 @@ Build: #${env.BUILD_NUMBER}
         failure {
             emailext(
                 subject: "❌ Тесты упали (${params.TAG}, ${params.ENV})",
-                body: """\
-Pipeline: ${env.JOB_NAME}
+                body: """Pipeline: ${env.JOB_NAME}
 Build: #${env.BUILD_NUMBER}
 Стенд: ${params.ENV}
 Тег: ${params.TAG}
