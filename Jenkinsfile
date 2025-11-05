@@ -11,6 +11,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -21,54 +22,43 @@ pipeline {
         stage('Run tests') {
             steps {
                 echo "Запуск тестов по тегу: ${params.TAG} на стенде: ${params.ENV}"
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh """
-                       ./gradlew clean test \
-                         -Dallure.results.directory=${ALLURE_RESULTS} \
-                         -Denv=${params.ENV} \
-                         -Dgroups=${params.TAG}
-                    """
+
+                script {
+                    def taskName = ""
+                    if (params.TAG == 'API') taskName = "testApi"
+                    if (params.TAG == 'WEB') taskName = "testWeb"
+                    if (params.TAG == 'SMOKE') taskName = "testSmoke"
+
+                    sh "./gradlew clean ${taskName} -Dallure.results.directory=${ALLURE_RESULTS} -Denv=${params.ENV}"
                 }
             }
         }
 
         stage('Allure Report') {
             steps {
-                script {
-                    if (fileExists("${ALLURE_RESULTS}")) {
-                        allure([
-                            results: [[path: "${ALLURE_RESULTS}"]],
-                            reportBuildPolicy: 'ALWAYS'
-                        ])
-                    } else {
-                        echo "Allure results folder not found, skipping report"
-                    }
-                }
+                allure results: [[path: "${ALLURE_RESULTS}"]]
             }
         }
     }
 
     post {
         success {
-            emailext(
+            emailext (
                 subject: "✅ Тесты успешно завершены (${params.TAG}, ${params.ENV})",
-                body: """Pipeline: ${env.JOB_NAME}
-Build: #${env.BUILD_NUMBER}
-Стенд: ${params.ENV}
-Тег: ${params.TAG}
-✔ Все тесты прошли успешно!""",
+                body: """✔ Pipeline: ${env.JOB_NAME}
+✔ Build: #${env.BUILD_NUMBER}
+✔ Стенд: ${params.ENV}
+✔ Тег: ${params.TAG}""",
                 to: "pavel.pomikalov@yandex.ru"
             )
         }
 
         failure {
-            emailext(
+            emailext (
                 subject: "❌ Тесты упали (${params.TAG}, ${params.ENV})",
-                body: """Pipeline: ${env.JOB_NAME}
-Build: #${env.BUILD_NUMBER}
-Стенд: ${params.ENV}
-Тег: ${params.TAG}
-❌ Проверьте логи и исправьте ошибки""",
+                body: """❌ Pipeline: ${env.JOB_NAME}
+❌ Build: #${env.BUILD_NUMBER}
+❌ смотри логи""",
                 to: "pavel.pomikalov@yandex.ru"
             )
         }
