@@ -1,21 +1,14 @@
 pipeline {
     agent any
-    options {
-        timestamps()
-    }
+
     parameters {
         booleanParam(name: 'API', defaultValue: false, description: 'Запуск тестов с тегом API')
         booleanParam(name: 'SMOKE', defaultValue: false, description: 'Запуск тестов с тегом SMOKE')
         booleanParam(name: 'WEB', defaultValue: false, description: 'Запуск тестов с тегом WEB')
         booleanParam(name: 'UI', defaultValue: false, description: 'Запуск тестов с тегом UI')
     }
-    stages {
-        stage('Clean Workspace') {
-            steps {
-                deleteDir()
-            }
-        }
 
+    stages {
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/PavelPomykalov/FrameworkApiWeb', branch: 'main'
@@ -25,29 +18,21 @@ pipeline {
         stage('Run Tests') {
             steps {
                 script {
-                    def tasksToRun = []
-                    if (params.API) tasksToRun << 'testApi'
-                    if (params.SMOKE) tasksToRun << 'testSmoke'
-                    if (params.WEB) tasksToRun << 'testWeb'
-                    if (params.UI) tasksToRun << 'testUi' // если есть такая Gradle задача
+                    def tags = []
+                    if (params.API) tags << 'API'
+                    if (params.SMOKE) tags << 'SMOKE'
+                    if (params.WEB) tags << 'WEB'
+                    if (params.UI) tags << 'UI'
 
-                    if (tasksToRun.isEmpty()) {
+                    if (tags.isEmpty()) {
                         echo "Ни один тест не выбран. Пропускаем запуск."
                     } else {
-                        echo "Запуск Gradle задач: ${tasksToRun.join(' ')}"
-                        sh 'rm -rf build/allure-results'
-
-                        def result = sh(
-                            script: "./gradlew ${tasksToRun.join(' ')} -Dallure.results.directory=build/allure-results || true",
-                            returnStatus: true
-                        )
-
-                        sh './gradlew allureReport'
-
-                        if (result != 0) {
-                            currentBuild.result = 'FAILURE'
-                            echo "Некоторые тесты завершились с ошибками"
-                        }
+                        echo "Запуск тестов с тегами: ${tags.join(', ')}"
+                        sh "rm -rf build/allure-results"
+                        // Запуск Gradle с тегами
+                        sh "./gradlew clean test -Dallure.results.directory=build/allure-results -Dtags=${tags.join(',')} || true"
+                        // Генерация Allure отчета
+                        sh "./gradlew allureReport || true"
                     }
                 }
             }
@@ -56,9 +41,9 @@ pipeline {
 
     post {
         always {
-            echo "Сборка завершена. Публикуем Allure отчет."
+            // Публикация Allure отчета
             allure([
-                report: [[path: 'build/allure-results']]
+                results: [[path: 'build/allure-results']]
             ])
         }
     }
