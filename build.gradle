@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'io.qameta.allure' version '2.12.0' // Добавляем Allure плагин
+    id 'io.qameta.allure' version '2.12.0'
 }
 
 group = 'pavelP'
@@ -11,70 +11,61 @@ repositories {
 }
 
 dependencies {
-    // --- Тесты ---
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
 
-    // --- RestAssured ---
     testImplementation 'io.rest-assured:rest-assured:5.5.6'
-
-    // --- Lombok ---
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
     testCompileOnly 'org.projectlombok:lombok:1.18.34'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
 
-    // --- JSON сериализация ---
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
-
-    // --- Faker (генерация тестовых данных) ---
     implementation 'com.github.javafaker:javafaker:1.0.2'
-
-    // --- Selenide для UI тестов ---
     testImplementation 'com.codeborne:selenide:6.19.1'
-
-    // --- AssertJ для мягких и обычных assertions ---
     testImplementation 'org.assertj:assertj-core:3.27.2'
-
-    // --- Owner для чтения проперти файлов ---
     implementation 'org.aeonbits.owner:owner:1.0.12'
 
-    // --- Allure ---
     testImplementation 'io.qameta.allure:allure-junit5:2.21.0'
-    testImplementation 'io.qameta.allure:allure-rest-assured:2.21.0'// Для JUnit 5
+    testImplementation 'io.qameta.allure:allure-rest-assured:2.21.0'
 }
 
-test {
+// === Общие настройки для всех тестов ===
+tasks.withType(Test).configureEach {
     useJUnitPlatform()
-    systemProperties(System.getProperties())
-    testLogging {
-        events "PASSED", "FAILED", "SKIPPED" // Логирование результатов в консоль
-    }
+    testLogging { events "PASSED", "FAILED", "SKIPPED" }
+
+    // Параллельный запуск тестов JUnit 5
+    systemProperties += [
+            'junit.jupiter.execution.parallel.enabled'                 : 'true',
+            'junit.jupiter.execution.parallel.mode.default'            : 'concurrent',
+            'junit.jupiter.execution.parallel.mode.classes.default'    : 'concurrent',
+            'junit.jupiter.execution.parallel.config.strategy'         : 'fixed',
+            'junit.jupiter.execution.parallel.config.fixed.parallelism': 4
+    ]
+
+    // Параллельные JVM Gradle
+    maxParallelForks = 4
 }
 
-// === Задача для API-тестов ===
+// === Задачи по тегам ===
 tasks.register('testApi', Test) {
-    useJUnitPlatform {
-        includeTags 'API'
-    }
+    useJUnitPlatform { includeTags 'API' }
     description = 'Запускает все тесты с тегом @Tag("API")'
     group = 'verification'
+    maxParallelForks = 4
 }
 
-// === Задача для WEB-тестов ===
 tasks.register('testWeb', Test) {
-    useJUnitPlatform {
-        includeTags 'WEB'
-    }
+    useJUnitPlatform { includeTags 'WEB' }
     description = 'Запускает все тесты с тегом @Tag("WEB")'
     group = 'verification'
+    maxParallelForks = 4
 }
 
-// === Задача для SMOKE-тестов ===
 tasks.register('testSmoke', Test) {
-    useJUnitPlatform {
-        includeTags 'SMOKE'
-    }
+    useJUnitPlatform { includeTags 'SMOKE' }
     description = 'Запускает все тесты с тегом @Tag("SMOKE")'
     group = 'verification'
+    maxParallelForks = 4
 }
