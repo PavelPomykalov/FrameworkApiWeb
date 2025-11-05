@@ -2,13 +2,19 @@ pipeline {
     agent any
 
     parameters {
-        booleanParam(name: 'API', defaultValue: false, description: 'Запуск тестов с тегом API')
-        booleanParam(name: 'SMOKE', defaultValue: false, description: 'Запуск тестов с тегом SMOKE')
-        booleanParam(name: 'WEB', defaultValue: false, description: 'Запуск тестов с тегом WEB')
-        booleanParam(name: 'UI', defaultValue: false, description: 'Запуск тестов с тегом UI')
+        booleanParam(name: 'API', defaultValue: false, description: 'Тег API')
+        booleanParam(name: 'SMOKE', defaultValue: false, description: 'Тег SMOKE')
+        booleanParam(name: 'WEB', defaultValue: false, description: 'Тег WEB')
+        booleanParam(name: 'UI', defaultValue: false, description: 'Тег UI')
     }
 
     stages {
+        stage('Clean Workspace') {
+            steps {
+                deleteDir() // чистим рабочую директорию перед сборкой
+            }
+        }
+
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/PavelPomykalov/FrameworkApiWeb', branch: 'main'
@@ -18,33 +24,37 @@ pipeline {
         stage('Run Tests') {
             steps {
                 script {
-                    def tags = []
-                    if (params.API) tags << 'API'
-                    if (params.SMOKE) tags << 'SMOKE'
-                    if (params.WEB) tags << 'WEB'
-                    if (params.UI) tags << 'UI'
+                    // Формируем список задач Gradle для выбранных тегов
+                    def tasks = []
+                    if (params.API) tasks << 'testApi'
+                    if (params.SMOKE) tasks << 'testSmoke'
+                    if (params.WEB) tasks << 'testWeb'
+                    // UI-тесты пока не делаем, можно добавить аналогично
 
-                    if (tags.isEmpty()) {
-                        echo "Ни один тест не выбран. Пропускаем запуск."
+                    if (tasks.isEmpty()) {
+                        echo "Тесты не выбраны. Пропуск."
                     } else {
-                        echo "Запуск тестов с тегами: ${tags.join(', ')}"
-                        sh "rm -rf build/allure-results"
-                        // Запуск Gradle с тегами
-                        sh "./gradlew clean test -Dallure.results.directory=build/allure-results -Dtags=${tags.join(',')} || true"
-                        // Генерация Allure отчета
-                        sh "./gradlew allureReport || true"
+                        // удаляем предыдущие результаты Allure
+                        sh 'rm -rf build/allure-results'
+
+                        // запускаем выбранные задачи
+                        tasks.each { task ->
+                            echo "Запуск Gradle задачи: ${task}"
+                            sh "./gradlew ${task} -Dallure.results.directory=build/allure-results || true"
+                        }
                     }
                 }
             }
         }
-    }
 
-    post {
-        always {
-            // Публикация Allure отчета
-            allure([
-                results: [[path: 'build/allure-results']]
-            ])
+        stage('Allure Report') {
+            steps {
+                // формируем отчёт Allure из результатов
+                allure([
+                    results: [[path: 'build/allure-results']],
+                    reportBuildPolicy: 'ALWAYS'
+                ])
+            }
         }
     }
 }
