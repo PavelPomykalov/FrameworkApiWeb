@@ -1,15 +1,10 @@
 pipeline {
     agent any
     parameters {
-        extendedChoice(
-            name: 'TAGS',
-            type: 'PT_CHECKBOX',
-            multiSelectDelimiter: ',',
-            description: 'Выберите теги тестов',
-            quoteValue: false,
-            visibleItemCount: 5,
-            value: 'API,SMOKE,WEB,UI'
-        )
+        booleanParam(name: 'API', defaultValue: true, description: 'Тег API')
+        booleanParam(name: 'SMOKE', defaultValue: true, description: 'Тег SMOKE')
+        booleanParam(name: 'WEB', defaultValue: true, description: 'Тег WEB')
+        booleanParam(name: 'UI', defaultValue: false, description: 'Тег UI')
     }
     stages {
         stage('Checkout') {
@@ -20,14 +15,23 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                echo "Запуск тестов с тегами: ${params.TAGS} на стенде dev"
-                sh "./gradlew clean test -Dallure.results.directory=build/allure-results -Denv=dev -Dtags=${params.TAGS}"
+                script {
+                    def selectedTags = []
+                    if (params.API) selectedTags << 'API'
+                    if (params.SMOKE) selectedTags << 'SMOKE'
+                    if (params.WEB) selectedTags << 'WEB'
+                    if (params.UI) selectedTags << 'UI'
+
+                    def tagsString = selectedTags.join(',')
+                    echo "Запуск тестов с тегами: ${tagsString} на стенде dev"
+                    sh "./gradlew clean test -Dallure.results.directory=build/allure-results -Denv=dev -Dtags=${tagsString}"
+                }
             }
         }
 
         stage('Allure Report') {
             steps {
-                allure results: [[path: 'build/allure-results']]
+                allure includeProperties: false, jdk: '', results: [[path: 'build/allure-results']]
             }
         }
     }
