@@ -27,7 +27,6 @@ pipeline {
                    ./gradlew clean test \
                      -Dallure.results.directory=${ALLURE_RESULTS} \
                      -Denv=${params.ENV} \
-                     --tests * \
                      -Dgroups=${params.TAG}
                 """
             }
@@ -35,24 +34,44 @@ pipeline {
 
         stage('Allure Report') {
             steps {
-                allure results: [[path: "${ALLURE_RESULTS}"]]
+                script {
+                    // Проверяем, что папка с результатами существует
+                    if (fileExists("${ALLURE_RESULTS}")) {
+                        allure([
+                            results: [[path: "${ALLURE_RESULTS}"]],
+                            reportBuildPolicy: 'ALWAYS'
+                        ])
+                    } else {
+                        echo "Allure results folder not found, skipping report"
+                    }
+                }
             }
         }
     }
 
     post {
         success {
-            emailext (
+            emailext(
                 subject: "✅ Тесты успешно завершены (${params.TAG}, ${params.ENV})",
-                body: "✔ Pipeline: ${env.JOB_NAME}\n✔ Build: #${env.BUILD_NUMBER}\n✔ Стенд: ${params.ENV}\n✔ Тег: ${params.TAG}",
+                body: """\
+Pipeline: ${env.JOB_NAME}
+Build: #${env.BUILD_NUMBER}
+Стенд: ${params.ENV}
+Тег: ${params.TAG}
+✔ Все тесты прошли успешно!""",
                 to: "pavel.pomikalov@yandex.ru"
             )
         }
 
         failure {
-            emailext (
+            emailext(
                 subject: "❌ Тесты упали (${params.TAG}, ${params.ENV})",
-                body: "❌ Pipeline: ${env.JOB_NAME}\n❌ Build: #${env.BUILD_NUMBER}\n❌ смотри логи",
+                body: """\
+Pipeline: ${env.JOB_NAME}
+Build: #${env.BUILD_NUMBER}
+Стенд: ${params.ENV}
+Тег: ${params.TAG}
+❌ Проверьте логи и исправьте ошибки""",
                 to: "pavel.pomikalov@yandex.ru"
             )
         }
